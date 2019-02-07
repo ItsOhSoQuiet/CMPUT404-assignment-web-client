@@ -34,6 +34,26 @@ class HTTPResponse(object):
 
 class HTTPClient(object):
     #def get_host_port(self,url):
+    
+    # Take the url, and separate it into its different components
+    # Took from: https://docs.python.org/3/library/urllib.parse.html
+    def parse_url(self, url):
+        parsed_url = urllib.parse.urlparse(url)
+        port = parsed_url.port
+        host = parsed_url.hostname
+
+        # get the scheme, if none, make it https
+        scheme = parsed_url.scheme
+        if scheme == '':
+            scheme = 'https'
+        
+        # get the path, if no path, then make it root
+        path = parsed_url.path
+        if path == '':
+            path = '/'
+        
+        return port, host, scheme, path
+
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,8 +88,32 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        port, host, scheme, path = self.parse_url(url)
+
+        # read the data from the URL in the request.
+        # First, we need to make a socket to connect to the 
+        # URL in question.
+        self.connect(host, port)
+
+        # Then we have to form a request
+        # How to do that taken from here: 
+        # https://www.tutorialspoint.com/http/http_requests.htm
+        request = "GET " + path + " HTTP/1.1\r\n"
+        request += "Host: " + host + "\r\n"
+        request += "Accept: */*\r\n"
+        request += "Connection: close\r\n\r\n"
+        
+        # Now, send the request to the socket
+        self.sendall(request)
+
+        # Then, read all of the data from the socket
+        request_data = self.recvall(self.socket)
+
+        # Always remember to close the socket!
+        self.close()
+        
+        code = self.get_code(request_data)
+        body = self.get_body(request_data)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
