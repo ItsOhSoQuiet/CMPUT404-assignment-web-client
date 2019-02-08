@@ -63,8 +63,13 @@ class HTTPClient(object):
     def get_code(self, data):
         return None
 
+    # Instead of getting data from the socket,
+    # I am using this to get headers from arguments
+    # Learned about urlencode from here: 
+    # https://docs.python.org/3/library/urllib.parse.html
     def get_headers(self,data):
-        return None
+        headers = urllib.parse.urlencode(data)
+        return headers
 
     def get_body(self, data):
         return None
@@ -132,9 +137,16 @@ class HTTPClient(object):
         request += "Host: " + host + "\r\n"
         if args is None:
             request += "Content-Length: 0\r\n"
+            headers = ""
         else:
             # Arguments are a dictionary, need to parse them
             # so that they can become headers.
+            headers = self.get_headers(args)
+            request += "Content-Length: " + str(len(headers)) + "\r\n"
+        request += "Content-Type: application/x-www-form-urlencoded"
+        request += "Accept: */*\r\n"
+        request += "Connection: close\r\n\r\n"
+        request += headers
 
         code = 500
         body = ""
