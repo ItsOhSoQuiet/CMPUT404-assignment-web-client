@@ -91,7 +91,7 @@ class HTTPClient(object):
     # then get the body of the request.
     def get_body(self, data):
         try:
-            body = data.split("\r\n\r\n")
+            body = data.split("\r\n\r\n")[1]
         except Exception as e:
             body = ""
 
