@@ -38,17 +38,17 @@ class HTTPClient(object):
     # Take the url, and separate it into its different components
     # Took from: https://docs.python.org/3/library/urllib.parse.html
     def parse_url(self, url):
-        parsed_url = urllib.parse.urlparse(url)
-        port = parsed_url.port
-        host = parsed_url.hostname
+        url_object = urllib.parse.urlparse(url)
+        port = url_object.port
+        host = url_object.hostname
 
         # get the scheme, if none, make it http
-        scheme = parsed_url.scheme
+        scheme = url_object.scheme
         if scheme == '':
             scheme = 'http'
         
         # get the path, if no path, then make it root
-        path = parsed_url.path
+        path = url_object.path
         if path == '':
             path = '/'
 
@@ -75,7 +75,7 @@ class HTTPClient(object):
         try:
             code = int(data.split(" ")[1])
         except Exception as e:
-            code = 400 # Bad Request
+            code = 400 # Bad Request https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
 
         return code
 
@@ -83,6 +83,8 @@ class HTTPClient(object):
     # I am using this to get headers from arguments
     # Learned about urlencode from here: 
     # https://docs.python.org/3/library/urllib.parse.html
+    # Learned about how sockets read in data from here:
+    # https://docs.python.org/3/library/socket.html
     def get_headers(self,data):
         headers = urllib.parse.urlencode(data)
         return headers
@@ -136,6 +138,7 @@ class HTTPClient(object):
 
         # Then, read all of the data from the socket
         request_data = self.recvall(self.socket)
+        # print(request_data)
 
         # Always remember to close the socket!
         self.close()
@@ -177,6 +180,7 @@ class HTTPClient(object):
 
         # Then, read all of the data from the socket
         request_data = self.recvall(self.socket)
+        # print(request_data)
 
         # Always remember to close the socket!
         self.close()
