@@ -117,6 +117,25 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
+        port, host, scheme, path = self.parse_url(url)
+
+        # read the data from the URL in the request.
+        # First, we need to make a socket to connect to the 
+        # URL in question.
+        self.connect(host, port)
+
+        # Then we have to form a request
+        # How to do that taken from here: 
+        # https://www.tutorialspoint.com/http/http_requests.htm
+        # Also need to account for any arguments that could be a query.
+        request = "POST " + path + " HTTP/1.1\r\n"
+        request += "Host: " + host + "\r\n"
+        if args is None:
+            request += "Content-Length: 0\r\n"
+        else:
+            # Arguments are a dictionary, need to parse them
+            # so that they can become headers.
+
         code = 500
         body = ""
         return HTTPResponse(code, body)
