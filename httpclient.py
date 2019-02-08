@@ -42,15 +42,24 @@ class HTTPClient(object):
         port = parsed_url.port
         host = parsed_url.hostname
 
-        # get the scheme, if none, make it https
+        # get the scheme, if none, make it http
         scheme = parsed_url.scheme
         if scheme == '':
-            scheme = 'https'
+            scheme = 'http'
         
         # get the path, if no path, then make it root
         path = parsed_url.path
         if path == '':
             path = '/'
+
+        # If no port is mentioned, give it a port.
+        # Info on port 443 found here: 
+        # https://www.grc.com/port_443.htm
+        if port is None:
+            if scheme == "https":
+                port = 443
+            else:
+                port = 80
         
         return port, host, scheme, path
 
@@ -146,10 +155,19 @@ class HTTPClient(object):
         request += "Content-Type: application/x-www-form-urlencoded"
         request += "Accept: */*\r\n"
         request += "Connection: close\r\n\r\n"
-        request += headers
+        request += headers + "\r\n"
 
-        code = 500
-        body = ""
+        # Now, send the request to the socket
+        self.sendall(request)
+
+        # Then, read all of the data from the socket
+        request_data = self.recvall(self.socket)
+
+        # Always remember to close the socket!
+        self.close()
+
+        code = self.get_code(request_data)
+        body = self.get_body(request_data)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
