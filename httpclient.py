@@ -69,8 +69,15 @@ class HTTPClient(object):
         self.socket.connect((host, port))
         return None
 
+    # Split the data of the request, get the code from
+    # the request.
     def get_code(self, data):
-        return None
+        try:
+            code = int(data.split(" ")[1])
+        except Exception as e:
+            code = 400 # Bad Request
+
+        return code
 
     # Instead of getting data from the socket,
     # I am using this to get headers from arguments
@@ -80,8 +87,15 @@ class HTTPClient(object):
         headers = urllib.parse.urlencode(data)
         return headers
 
+    # Split the data from the data buffer, and 
+    # then get the body of the request.
     def get_body(self, data):
-        return None
+        try:
+            body = data.split("\r\n\r\n")
+        except Exception as e:
+            body = ""
+
+        return body
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -152,10 +166,11 @@ class HTTPClient(object):
             # so that they can become headers.
             headers = self.get_headers(args)
             request += "Content-Length: " + str(len(headers)) + "\r\n"
-        request += "Content-Type: application/x-www-form-urlencoded"
+        request += "Content-Type: application/x-www-form-urlencoded\r\n"
         request += "Accept: */*\r\n"
         request += "Connection: close\r\n\r\n"
-        request += headers + "\r\n"
+        if args is not None:
+            request += headers + "\r\n"
 
         # Now, send the request to the socket
         self.sendall(request)
